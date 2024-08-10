@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios'; // Import axios
 import './login.css';
 
 function Login() {
@@ -7,7 +8,6 @@ function Login() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   
-  // Create navigate function using useNavigate
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -29,12 +29,24 @@ function Login() {
     return Object.keys(formErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log('Form is valid. Login attempted with:', username, password);
-      // Navigate to the Visual page upon successful login
-      navigate('/visual');
+      try {
+        const response = await axios.post('https://your-backend-url.com/login', {
+          username,
+          password
+        });
+
+        const { token } = response.data;
+
+        localStorage.setItem('authToken', token);
+
+        navigate('/visual');
+      } catch (error) {
+        console.error('Login failed:', error);
+        navigate('/error', { state: { message: 'Login failed. Please check your credentials.' } });
+      }
     } else {
       console.log('Form has errors. Please correct them.');
     }
@@ -67,6 +79,7 @@ function Login() {
           />
           {errors.password && <span className="error">{errors.password}</span>}
         </div>
+        {errors.general && <div className="error">{errors.general}</div>}
         <button type="submit">Login</button>
       </form>
     </div>
